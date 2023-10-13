@@ -9,20 +9,17 @@ BEGIN
     DECLARE total_score FLOAT;
     DECLARE total_count INT;
     
-    SELECT SUM(score) INTO total_score, COUNT(*) INTO total_count
+    SELECT SUM(score) INTO total_score
     FROM corrections
-    WHERE user_id = user_id;
+    WHERE corrections.user_id = user_id;
     
-    DECLARE avg_score FLOAT;
-    IF total_count > 0 THEN
-        SET avg_score = total_score / total_count;
-    ELSE
-        SET avg_score = 0;
-    END IF;
+    SELECT COUNT(*) INTO total_count
+    FROM corrections
+    WHERE corrections.user_id = user_id;
     
     UPDATE users
-    SET average_score = avg_score
-    WHERE id = user_id;
+    SET users.average_score = IF(total_count = 0, 0, total_score / total_count)
+    WHERE users.id = user_id;
 END $$
 
 DELIMITER ;
