@@ -4,12 +4,14 @@
 from pymongo import MongoClient
 
 
-from pymongo import MongoClient
-
 def count_logs_with_method(mongo_collection, method):
+    """counts logs with methods
+    """
     return mongo_collection.count_documents({"method": method})
 
 def count_logs_with_status_check(mongo_collection):
+    """counts logs with status check
+    """
     return mongo_collection.count_documents({"method": "GET", "path": "/status"})
 
 if __name__ == "__main__":
@@ -26,9 +28,9 @@ if __name__ == "__main__":
 
     print(f"{total_logs} logs")
     print("Methods:")
-    print(f"\tmethod GET: {get_count}")
-    print(f"\tmethod POST: {post_count}")
-    print(f"\tmethod PUT: {put_count}")
-    print(f"\tmethod PATCH: {patch_count}")
-    print(f"\tmethod DELETE: {delete_count}")
+    print(f"    method GET: {get_count}")
+    print(f"    method POST: {post_count}")
+    print(f"    method PUT: {put_count}")
+    print(f"    method PATCH: {patch_count}")
+    print(f"    method DELETE: {delete_count}")
     print(f"{status_check_count} status check")
