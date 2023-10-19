@@ -2,8 +2,25 @@
 """Cache module task0
 """
 from typing import Union, Callable
+import functools
 import redis
 import uuid
+
+
+def count_calls(method: Callable) -> Callable:
+    """counts how many times a Cache method is called
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """wrapper function
+        """
+        key = method.__qualname__
+        count = self._redis.get(key)
+        count = int(count) if count is not None else 0
+        self._redis.set(key, count + 1)
+        return method(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Cache():
@@ -15,6 +32,7 @@ class Cache():
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """generates a random key and inputs data in redis
         using the random key
