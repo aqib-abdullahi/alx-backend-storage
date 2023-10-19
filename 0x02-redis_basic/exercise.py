@@ -28,11 +28,9 @@ class Cache():
         which will be used to convert data back to the desired
         format"""
         data = self._redis.get(key)
-        if data and fn is not None:
-            fn(data)
-            return data
-        else:
-            return data
+        if data is not None and fn is not None:
+            return fn(data)
+        return data
 
     def get_str(self, key: str) -> Union[str, None]:
         """parametrize Cache.get with the correct conversion
