@@ -14,7 +14,7 @@ def caching(method: Callable) -> Callable:
     """Caches data output
     """
     @functools.wraps(method)
-    def wrapper(url: str) -> str:
+    def wrapper(url) -> str:
         """caches the output
         """
         redis.incr(f'count:{url}')
