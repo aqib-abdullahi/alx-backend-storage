@@ -17,13 +17,21 @@ def caching(method: Callable) -> Callable:
     def wrapper(url) -> str:
         """caches the output
         """
-        redis.incr(f'count:{url}')
-        result = redis.get(f'result:{url}')
+        count_key = f'count:{url}'
+        result_key = f'result:{url}'
+        count = redis.incr(count_key)
+
+        if count_key == 1:
+            redis.set(count_key, 0)
+            redis.expire(count_key, 10)
+        else:
+            redis.expire(count_key, 10)
+        result = redis.get(result_key)
         if result:
             return result.decode('utf-8')
         result = method(url)
-        redis.set(f'count:{url}', 0)
-        redis.setex(f'result:{url}', 10, result)
+#        redis.set(f'count:{url}', 0)
+        redis.setex(result_key, 10, result)
         return result
     return wrapper
 
