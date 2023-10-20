@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cache module task0
 """
-from typing import Union, Callable
+from typing import Union, Callable, Any
 import functools
 import redis
 import uuid
@@ -11,7 +11,7 @@ def count_calls(method: Callable) -> Callable:
     """counts how many times a Cache method is called
     """
     @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs) -> Any:
         """wrapper function
         """
         key = method.__qualname__
@@ -26,38 +26,49 @@ def call_history(method: Callable) -> Callable:
     function
     """
     @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        """returns callable
+    def historian(self, *args, **kwargs) -> Any:
+        """returns output of the method called in arg8ment
         """
         input_list = f"{method.__qualname__}:inputs"
         output_list = f"{method.__qualname__}:outputs"
-        self._redis.rpush(input_list, str(args))
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(input_list, str(args))
         output = method(self, *args, **kwargs)
-        self._redis.rpush(output_list, str(output))
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(output_list, output)
         return output
+    return historian
 
-    return wrapper
 
-
-def replay(method: Callable):
+def replay(method: Callable) -> None:
     """prints how many times a function has been called
     """
+    if method is None or not hasattr(method, '__self__'):
+        return
+    redis_store = getattr(method.__self__, '_redis', None)
+    if not isinstance(redis_store, redis.Redis):
+        return
     method_name = method.__qualname__
     inputs = f"{method.__qualname__}:inputs"
     outputs = f"{method.__qualname__}:outputs"
-    input_contents = cache._redis.lrange(inputs, 0, -1)
-    output_contents = cache._redis.lrange(outputs, 0, -1)
+    input_contents = redis_store.lrange(inputs, 0, -1)
+    output_contents = redis_store.lrange(outputs, 0, -1)
     print(f"{method_name} was called {len(inputs)} times:")
 
     for input_values, output_values in zip(input_contents, output_contents):
-        input_args = eval(input)
-        print(f"{method_name}({input_args}) -> {output_data}")
+        print('{}(*{}) -> {}'.format(
+            method_name,
+            input_values.decode("utf-8"),
+            output_values
+        ))
+#       input_args = eval(input_values)
+#       print(f"{method_name}({input_args}) -> {output_values}")
 
 
-class Cache():
+class Cache:
     """cache class
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """initializer
         """
         self._redis = redis.Redis()
@@ -92,4 +103,6 @@ class Cache():
         return self.get(key, fn=lambda d: d.decode("utf-8"))
 
     def get_int(self, key: str) -> int:
+        """ises the get method for int type conversion
+        """
         return self.get(key, fn=lambda d: int(d))
