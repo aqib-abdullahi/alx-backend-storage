@@ -8,7 +8,9 @@ import functools
 
 
 redis = redis.Redis()
-def caching(method: Callable) -> Callabe:
+
+
+def caching(method: Callable) -> Callable:
     """Caches data output
     """
     @functools.wraps(method)
@@ -33,5 +35,3 @@ def get_page(url: str) -> str:
     """
     content = requests.get(url).text
     return content
-
-
